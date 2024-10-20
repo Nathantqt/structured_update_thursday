@@ -1,0 +1,87 @@
+Sub ColorCellsInColumnO()
+    Dim cell As Range
+    Dim ws As Worksheet
+    Dim targetCell As Range
+    Dim cellE As Range
+    Dim searchValue As String
+    Dim foundCell As Range
+    Dim cellD As Range
+    Dim cellM As Range
+    Dim selectedRange As Range
+
+    Set ws = ThisWorkbook.ActiveSheet
+    Set selectedRange = Selection
+
+    For Each cell In selectedRange
+        If Not Intersect(cell, ws.Columns("R")) Is Nothing Then
+            If cell.Value = "Buy-Back" Then
+                Set targetCell = ws.Cells(cell.Row, "O")
+                targetCell.Interior.Color = RGB(255, 255, 0) ' Jaune
+            End If
+        End If
+    Next cell
+    For Each cell In selectedRange
+        Set cellD = ws.Cells(cell.Row, "D")
+        Set cellM = ws.Cells(cell.Row, "M")
+        
+        If cell.Value = "Increase" Or cell.Value = "Unwind" Or (cell.Value = "New" And cellD.Value = "AMC") Then
+ 
+            Set cellE = ws.Cells(cell.Row, "E")
+            searchValue = cellE.Value
+            Set foundCell = ws.Columns("E").Find(What:=searchValue, LookIn:=xlValues)
+
+            If Not foundCell Is Nothing Then
+                ws.Cells(cell.Row, "O").Value = ws.Cells(foundCell.Row, "O").Value ' Copy value from column O of found row to column O of current row
+            End If
+        
+    
+        ElseIf cell.Value = "New" And cellD.Value <> "AMC" And cellM.Value <> "" Then
+            ws.Cells(cell.Row, "O").Value = cellM.Value
+            
+            
+            
+        Dim wb As Workbook
+        Dim searchWB As Workbook
+        Dim swissTrade As Worksheet, nonSwissTrade As Worksheet, nordicTrade As Worksheet
+        Dim FindValue As Range
+        
+        Set wb = ThisWorkbook
+        Application.ScreenUpdating = False
+        Set searchWB = Workbooks.Open("C:\Users\natha\Desktop\Perso\VBA\ISIN File New.xlsx", ReadOnly:=True)
+        Set swissTrade = searchWB.Sheets("SwissTrade")
+        Set nonSwissTrade = searchWB.Sheets("NonSwissTrade")
+        Set nordicTrade = searchWB.Sheets("NordicTrade")
+
+        searchValue = cellM.Value
+
+        Dim foundRange As Range
+        Set foundRange = Nothing
+
+        ' Recherche sur la feuille SwissTrade
+        Set foundRange = swissTrade.Columns("H:H").Find(What:=searchValue, LookIn:=xlValues)
+        If Not foundRange Is Nothing Then
+            Set FindValue = swissTrade.Cells(foundRange.Row, "C")
+        End If
+        ' Si non trouvé sur SwissTrade, recherche sur la feuille NonSwissTrade
+        If foundRange Is Nothing Then
+            Set foundRange = nonSwissTrade.Columns("H:H").Find(What:=searchValue, LookIn:=xlValues)
+            Set FindValue = nonSwissTrade.Cells(foundRange.Row, "C")
+        End If
+
+        ' Si non trouvé sur NonSwissTrade, recherche sur la feuille NordicTrade
+        If foundRange Is Nothing Then
+            Set foundRange = nordicTrade.Columns("H:H").Find(What:=searchValue, LookIn:=xlValues)
+            Set FindValue = nordicTrade.Cells(foundRange.Row, "C")
+        End If
+
+        ' Copie la valeur de la colonne C si trouvé et la colle dans la colonne O du classeur initial
+        If Not foundRange Is Nothing Then
+            ws.Cells(cell.Row, "O").Value = FindValue.Value
+        End If
+
+        searchWB.Close SaveChanges:=False
+        End If
+
+    Next cell
+
+End Sub
